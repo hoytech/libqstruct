@@ -14,7 +14,7 @@ Building and Installing
 
 In order to build this library you need to install a C compiler such as [gcc](http://gcc.gnu.org) and the [Ragel State Machine Compiler](http://www.complang.org/ragel/).
 
-The library can be compiled by simply running C<make>:
+The library can be compiled by simply running `make`:
 
     $ make
 
