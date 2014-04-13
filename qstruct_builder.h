@@ -98,7 +98,7 @@ static inline int qstruct_builder_set_bool(struct qstruct_builder *builder, size
   return 0;
 }
 
-static inline int qstruct_builder_set_pointer(struct qstruct_builder *builder, size_t byte_offset, char *value, size_t value_size, int alignment) {
+static inline int qstruct_builder_set_pointer(struct qstruct_builder *builder, size_t byte_offset, char *value, size_t value_size, int alignment, size_t *output_data_start) {
   size_t data_start;
   uint64_t data_start64, value_size64;
 
@@ -110,13 +110,14 @@ static inline int qstruct_builder_set_pointer(struct qstruct_builder *builder, s
   } else {
     data_start = QSTRUCT_ALIGN_UP(builder->msg_size, alignment);
     if (qstruct_builder_expand_msg(builder, data_start + value_size)) return -2;
-    data_start64 = (uint64_t) data_start;
-    value_size64 = (uint64_t) value_size << 8;
+    data_start64 = (uint64_t)data_start;
+    value_size64 = (uint64_t)value_size << 8;
     QSTRUCT_STORE_8BYTE_LE(&value_size64, builder->buf + byte_offset);
     QSTRUCT_STORE_8BYTE_LE(&data_start64, builder->buf + byte_offset + 8);
   }
 
-  memcpy(builder->buf + data_start, value, value_size);
+  if (value) memcpy(builder->buf + data_start, value, value_size);
+  if (output_data_start) *output_data_start = data_start;
 
   return 0;
 }
