@@ -48,7 +48,7 @@ static inline int qstruct_get_bool(char *buf, size_t buf_size, size_t byte_offse
 }
 
 
-static inline int qstruct_get_pointer(char *buf, size_t buf_size, size_t byte_offset, char **output, size_t *output_size, int allow_tagged_pointer) {
+static inline int qstruct_get_pointer(char *buf, size_t buf_size, size_t byte_offset, char **output, size_t *output_size, int alignment) {
   uint64_t body_size, length, start_offset;
   if (buf_size < 16) return -1;
   QSTRUCT_LOAD_8BYTE_LE(buf + 8 , &body_size);
@@ -59,12 +59,12 @@ static inline int qstruct_get_pointer(char *buf, size_t buf_size, size_t byte_of
   } else {
     QSTRUCT_LOAD_8BYTE_LE(buf + byte_offset, &length);
 
-    if (allow_tagged_pointer && length & 0xF) {
+    if (alignment == 1 && length & 0xF) {
       *output = buf + byte_offset + 1;
       *output_size = (size_t)(length & 0xF);
     } else {
       length = length >> 8;
-      QSTRUCT_LOAD_8BYTE_LE(buf + byte_offset, &start_offset);
+      QSTRUCT_LOAD_8BYTE_LE(buf + byte_offset + 8, &start_offset);
       if (start_offset + length > SIZE_MAX) return -2;
       if (start_offset + length > buf_size) return -1;
       *output = buf + start_offset;

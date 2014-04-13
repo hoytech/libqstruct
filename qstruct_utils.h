@@ -58,4 +58,8 @@
 #endif
 
 
+#define QSTRUCT_ALIGN_UP(p, a) (((p) + (a) - 1) & ~((a) - 1))
+
+
+
 #endif

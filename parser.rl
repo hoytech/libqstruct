@@ -102,7 +102,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       if (packing_result < 0)
         PARSE_ERROR("memory error in packing (line %d)", curr_line);
 
-      def[0].body_size = (size_t) packing_result;
+      def[0].body_size = (size_t) packing_result - QSTRUCT_HEADER_SIZE;
     }
 
 
