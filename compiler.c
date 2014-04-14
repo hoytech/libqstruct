@@ -57,6 +57,8 @@ static int size_of_type(struct qstruct_item *item) {
 
 
 static int worst_case_size_of_type(struct qstruct_item *item) {
+  if (item->type & QSTRUCT_TYPE_MOD_ARRAY_DYN) return 16;
+
   switch(item->type & 0xFFFF) {
     case QSTRUCT_TYPE_STRING:
     case QSTRUCT_TYPE_BLOB:

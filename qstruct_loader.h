@@ -19,12 +19,13 @@ static inline int qstruct_sanity_check(char *buf, size_t buf_size) {
 }
 
 
-static inline int qstruct_get_uint64(char *buf, size_t buf_size, size_t byte_offset, uint64_t *output) {
+static inline int qstruct_get_uint64(char *buf, size_t buf_size, size_t byte_offset, uint64_t *output, int allow_heap) {
   uint64_t body_size;
   if (buf_size < 16) return -1;
   QSTRUCT_LOAD_8BYTE_LE(buf + 8, &body_size);
 
-  if (byte_offset + 8 > body_size + 16 || byte_offset + 8 > buf_size) {
+  if ((!allow_heap && byte_offset + 8 > body_size + 16) ||
+      (byte_offset + 8 > buf_size)) {
     *output = 0; // default value
   } else {
     QSTRUCT_LOAD_8BYTE_LE(buf + byte_offset, output);
