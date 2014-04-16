@@ -86,6 +86,30 @@ static inline int qstruct_builder_set_uint64(struct qstruct_builder *builder, si
   return 0;
 }
 
+static inline int qstruct_builder_set_uint32(struct qstruct_builder *builder, size_t byte_offset, uint32_t value) {
+  if (byte_offset + 4 > builder->msg_size) return -1;
+
+  QSTRUCT_STORE_4BYTE_LE(&value, builder->buf + byte_offset);
+
+  return 0;
+}
+
+static inline int qstruct_builder_set_uint16(struct qstruct_builder *builder, size_t byte_offset, uint16_t value) {
+  if (byte_offset + 2 > builder->msg_size) return -1;
+
+  QSTRUCT_STORE_2BYTE_LE(&value, builder->buf + byte_offset);
+
+  return 0;
+}
+
+static inline int qstruct_builder_set_uint8(struct qstruct_builder *builder, size_t byte_offset, uint8_t value) {
+  if (byte_offset + 1 > builder->msg_size) return -1;
+
+  *((char*)(builder->buf + byte_offset)) = *((char*)&value);
+
+  return 0;
+}
+
 static inline int qstruct_builder_set_bool(struct qstruct_builder *builder, size_t byte_offset, int bit_offset, int value) {
   if (byte_offset + 1 > builder->msg_size) return -1;
 
