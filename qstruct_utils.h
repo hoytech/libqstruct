@@ -8,8 +8,8 @@
 #define QSTRUCT_U16(x) ((uint16_t)(x))
 #define QSTRUCT_U32(x) ((uint32_t)(x))
 #define QSTRUCT_U64(x) ((uint64_t)(x))
-#define QSTRUCT_U16P(x) ((uint16 *)(x))
-#define QSTRUCT_U32P(x) ((uint32 *)(x))
+#define QSTRUCT_U16P(x) ((uint16_t *)(x))
+#define QSTRUCT_U32P(x) ((uint32_t *)(x))
 #define QSTRUCT_U64P(x) ((uint64_t *)(x))
 #define QSTRUCT_UC(x,n) (((unsigned char *)(x))[n])
 
