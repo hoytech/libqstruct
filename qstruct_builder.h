@@ -67,6 +67,9 @@ static inline int qstruct_builder_expand_msg(struct qstruct_builder *builder, si
     new_buf = realloc(builder->buf, new_buf_size);
     if (new_buf == NULL) return -1;
 
+    builder->buf = new_buf;
+    new_buf = NULL;
+
     memset(builder->buf + builder->buf_size, '\0', new_buf_size - builder->buf_size);
     builder->buf_size = new_buf_size;
   }
