@@ -78,8 +78,14 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
         items_allocated = curr_item_index*2;
       }
 
-      if (curr_item.type == QSTRUCT_TYPE_BOOL && curr_item.fixed_array_size != 1)
+      if ((curr_item.type & 0xFFFF) == QSTRUCT_TYPE_BOOL && (curr_item.type & (QSTRUCT_TYPE_MOD_ARRAY_FIX | QSTRUCT_TYPE_MOD_ARRAY_DYN)))
         PARSE_ERROR("bools can't be arrays (line %d)", curr_line);
+
+      if ((curr_item.type & 0xFFFF) == QSTRUCT_TYPE_STRING && (curr_item.type & QSTRUCT_TYPE_MOD_ARRAY_FIX))
+        PARSE_ERROR("strings can't be fixed-size arrays (line %d)", curr_line);
+
+      if ((curr_item.type & 0xFFFF) == QSTRUCT_TYPE_BLOB && (curr_item.type & QSTRUCT_TYPE_MOD_ARRAY_FIX))
+        PARSE_ERROR("blobs can't be fixed-size arrays (line %d)", curr_line);
 
       if (def->items[curr_item_index].occupied)
         PARSE_ERROR("duplicated index %ld (line %d)", curr_item_index, curr_line);
@@ -141,9 +147,9 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       ;
 
     array_spec = ('['
-                    integer >{ curr_item.type |= QSTRUCT_TYPE_MOD_ARRAY_FIX; curr_item.fixed_array_size = 0; }
+                    integer >{ curr_item.fixed_array_size = 0; }
                             @{ curr_item.fixed_array_size = curr_item.fixed_array_size * 10 + (fc - '0'); }
-                  ']'
+                  ']' >{ curr_item.type |= QSTRUCT_TYPE_MOD_ARRAY_FIX; }
 
                    |
 
