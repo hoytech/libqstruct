@@ -8,7 +8,7 @@ CC     = gcc
 W      = -W -Wall -Wbad-function-cast -Wextra -Wformat=2 -Wpointer-arith -Wfloat-equal -Wdeclaration-after-statement -Wshadow -Wunsafe-loop-optimizations -Wbad-function-cast -Wcast-qual -Wcast-align -Waggregate-return -Wmissing-field-initializers -Wredundant-decls -Woverlength-strings -Winline -Wdisabled-optimization -Wstack-protector
 OPT    = -O2 -g
 CFLAGS = $(OPT) $(W) -fPIC $(XCFLAGS)
-LDLIBS = $(XLDFLAGS)
+LDLIBS = $(XLDLIBS)
 SOLIBS =
 prefix = /usr/local
 
