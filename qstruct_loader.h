@@ -94,12 +94,13 @@ static inline int qstruct_get_bool(char *buf, size_t buf_size, size_t byte_offse
 }
 
 
-static inline int qstruct_get_pointer(char *buf, size_t buf_size, size_t byte_offset, char **output, size_t *output_size, int alignment) {
+static inline int qstruct_get_pointer(char *buf, size_t buf_size, size_t byte_offset, char **output, size_t *output_size, int alignment, int allow_heap) {
   uint64_t body_size, length, start_offset;
   if (buf_size < 16) return -1;
   QSTRUCT_LOAD_8BYTE_LE(buf + 8 , &body_size);
 
-  if (byte_offset + 16 > body_size + 16 || byte_offset + 16 > buf_size) {
+  if ((!allow_heap && byte_offset + 16 > body_size + 16) ||
+      (byte_offset + 16 > buf_size)) {
     *output = 0; // default value
     *output_size = 0;
   } else {
