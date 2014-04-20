@@ -3,8 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "qstruct_compiler.h"
-#include "internal.h"
+#include "qstruct/compiler.h"
 
 
 static int alignment_of_type(struct qstruct_item *item) {

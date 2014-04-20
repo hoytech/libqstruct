@@ -14,8 +14,7 @@ prefix = /usr/local
 
 ########################################################################
 
-INSTALLEDHDRS = qstruct_utils.h qstruct_compiler.h qstruct_loader.h qstruct_builder.h
-PRIVATEHDRS = internal.h
+INSTALLEDHDRS = qstruct/utils.h qstruct/compiler.h qstruct/loader.h qstruct/builder.h
 INSTALLEDLIBS = libqstruct.a libqstruct.so
 OBJS = parser.o compiler.o
 
@@ -23,7 +22,7 @@ all: $(INSTALLEDLIBS)
 
 install: $(INSTALLEDLIBS) $(INSTALLEDHDRS)
 	for f in $(INSTALLEDLIBS); do cp $$f $(DESTDIR)$(prefix)/lib; done
-	for f in $(INSTALLEDHDRS); do cp $$f $(DESTDIR)$(prefix)/include; done
+	for f in $(INSTALLEDHDRS); do cp $$f $(DESTDIR)$(prefix)/include/qstruct; done
 
 clean:
 	rm -rf *.[ao] *.so parser.c
@@ -34,14 +33,14 @@ libqstruct.a: $(OBJS)
 libqstruct.so: $(OBJS)
 	$(CC) $(LDFLAGS) -shared -o $@ $(OBJS) $(SOLIBS)
 
-parser.o: parser.c qstruct_compiler.h internal.h
+parser.o: parser.c qstruct/compiler.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c parser.c
 
-parser.c: parser.rl
-	ragel -G2 parser.rl
+parser.c: parser.rl Makefile
+	ragel -T0 parser.rl
 
 %: %.o
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-%.o: %.c $(INSTALLEDHDRS) $(PRIVATEHDRS)
+%.o: %.c $(INSTALLEDHDRS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<

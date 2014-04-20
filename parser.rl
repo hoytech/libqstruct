@@ -4,8 +4,9 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "qstruct_compiler.h"
-#include "internal.h"
+#include "qstruct/compiler.h"
+
+ssize_t calculate_qstruct_packing(struct qstruct_definition *def);
 
 
 %%{

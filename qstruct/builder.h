@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-#include "qstruct_utils.h"
+#include "qstruct/utils.h"
 
 
 struct qstruct_builder {
