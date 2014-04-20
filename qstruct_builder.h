@@ -149,4 +149,12 @@ static inline int qstruct_builder_set_pointer(struct qstruct_builder *builder, s
   return 0;
 }
 
+static inline int qstruct_builder_set_raw_bytes(struct qstruct_builder *builder, size_t byte_offset, char *value, size_t value_size) {
+  if (byte_offset + value_size > builder->msg_size) return -1;
+
+  memcpy(builder->buf + byte_offset, value, value_size);
+
+  return 0;
+}
+
 #endif
