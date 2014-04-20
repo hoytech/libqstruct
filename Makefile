@@ -25,6 +25,11 @@ install: $(INSTALLEDLIBS) $(INSTALLEDHDRS)
 	mkdir $(DESTDIR)$(prefix)/include/qstruct/
 	for f in $(INSTALLEDHDRS); do cp $$f $(DESTDIR)$(prefix)/include/qstruct/; done
 
+uninstall:
+	rm $(DESTDIR)$(prefix)/lib/libqstruct.*
+	rm -f $(DESTDIR)$(prefix)/include/qstruct/*.h
+	rmdir $(DESTDIR)$(prefix)/include/qstruct/
+
 clean:
 	rm -rf *.[ao] *.so parser.c
 
