@@ -15,7 +15,7 @@ struct qstruct_builder {
   size_t msg_size;
 };
 
-static inline struct qstruct_builder *qstruct_builder_new(size_t body_size) {
+static QSTRUCT_INLINE struct qstruct_builder *qstruct_builder_new(size_t body_size) {
   struct qstruct_builder *builder;
   uint64_t body_size64;
 
@@ -38,20 +38,20 @@ static inline struct qstruct_builder *qstruct_builder_new(size_t body_size) {
   return builder;
 }
 
-static inline void qstruct_builder_free(struct qstruct_builder *builder) {
+static QSTRUCT_INLINE void qstruct_builder_free(struct qstruct_builder *builder) {
   if (builder->buf) free(builder->buf);
   free(builder);
 }
 
-static inline size_t qstruct_builder_get_msg_size(struct qstruct_builder *builder) {
+static QSTRUCT_INLINE size_t qstruct_builder_get_msg_size(struct qstruct_builder *builder) {
   return builder->msg_size;
 }
 
-static inline char *qstruct_builder_get_buf(struct qstruct_builder *builder) {
+static QSTRUCT_INLINE char *qstruct_builder_get_buf(struct qstruct_builder *builder) {
   return builder->buf;
 }
 
-static inline char *qstruct_builder_steal_buf(struct qstruct_builder *builder) {
+static QSTRUCT_INLINE char *qstruct_builder_steal_buf(struct qstruct_builder *builder) {
   char *buf;
 
   buf = builder->buf;
@@ -60,7 +60,7 @@ static inline char *qstruct_builder_steal_buf(struct qstruct_builder *builder) {
   return buf;
 }
 
-static inline int qstruct_builder_expand_msg(struct qstruct_builder *builder, size_t new_buf_size) {
+static QSTRUCT_INLINE int qstruct_builder_expand_msg(struct qstruct_builder *builder, size_t new_buf_size) {
   char *new_buf;
 
   if (new_buf_size > builder->buf_size) {
@@ -81,7 +81,7 @@ static inline int qstruct_builder_expand_msg(struct qstruct_builder *builder, si
 
 
 
-static inline int qstruct_builder_set_uint64(struct qstruct_builder *builder, size_t byte_offset, uint64_t value) {
+static QSTRUCT_INLINE int qstruct_builder_set_uint64(struct qstruct_builder *builder, size_t byte_offset, uint64_t value) {
   if (byte_offset + 8 > builder->msg_size) return -1;
 
   QSTRUCT_STORE_8BYTE_LE(&value, builder->buf + byte_offset);
@@ -89,7 +89,7 @@ static inline int qstruct_builder_set_uint64(struct qstruct_builder *builder, si
   return 0;
 }
 
-static inline int qstruct_builder_set_uint32(struct qstruct_builder *builder, size_t byte_offset, uint32_t value) {
+static QSTRUCT_INLINE int qstruct_builder_set_uint32(struct qstruct_builder *builder, size_t byte_offset, uint32_t value) {
   if (byte_offset + 4 > builder->msg_size) return -1;
 
   QSTRUCT_STORE_4BYTE_LE(&value, builder->buf + byte_offset);
@@ -97,7 +97,7 @@ static inline int qstruct_builder_set_uint32(struct qstruct_builder *builder, si
   return 0;
 }
 
-static inline int qstruct_builder_set_uint16(struct qstruct_builder *builder, size_t byte_offset, uint16_t value) {
+static QSTRUCT_INLINE int qstruct_builder_set_uint16(struct qstruct_builder *builder, size_t byte_offset, uint16_t value) {
   if (byte_offset + 2 > builder->msg_size) return -1;
 
   QSTRUCT_STORE_2BYTE_LE(&value, builder->buf + byte_offset);
@@ -105,7 +105,7 @@ static inline int qstruct_builder_set_uint16(struct qstruct_builder *builder, si
   return 0;
 }
 
-static inline int qstruct_builder_set_uint8(struct qstruct_builder *builder, size_t byte_offset, uint8_t value) {
+static QSTRUCT_INLINE int qstruct_builder_set_uint8(struct qstruct_builder *builder, size_t byte_offset, uint8_t value) {
   if (byte_offset + 1 > builder->msg_size) return -1;
 
   *((char*)(builder->buf + byte_offset)) = *((char*)&value);
@@ -113,7 +113,7 @@ static inline int qstruct_builder_set_uint8(struct qstruct_builder *builder, siz
   return 0;
 }
 
-static inline int qstruct_builder_set_bool(struct qstruct_builder *builder, size_t byte_offset, int bit_offset, int value) {
+static QSTRUCT_INLINE int qstruct_builder_set_bool(struct qstruct_builder *builder, size_t byte_offset, int bit_offset, int value) {
   if (byte_offset + 1 > builder->msg_size) return -1;
 
   if (value) {
@@ -125,7 +125,7 @@ static inline int qstruct_builder_set_bool(struct qstruct_builder *builder, size
   return 0;
 }
 
-static inline int qstruct_builder_set_pointer(struct qstruct_builder *builder, size_t byte_offset, char *value, size_t value_size, int alignment, size_t *output_data_start) {
+static QSTRUCT_INLINE int qstruct_builder_set_pointer(struct qstruct_builder *builder, size_t byte_offset, char *value, size_t value_size, int alignment, size_t *output_data_start) {
   size_t data_start;
   uint64_t data_start64, value_size64;
 
@@ -149,7 +149,7 @@ static inline int qstruct_builder_set_pointer(struct qstruct_builder *builder, s
   return 0;
 }
 
-static inline int qstruct_builder_set_raw_bytes(struct qstruct_builder *builder, size_t byte_offset, char *value, size_t value_size) {
+static QSTRUCT_INLINE int qstruct_builder_set_raw_bytes(struct qstruct_builder *builder, size_t byte_offset, char *value, size_t value_size) {
   if (byte_offset + value_size > builder->msg_size) return -1;
 
   memcpy(builder->buf + byte_offset, value, value_size);

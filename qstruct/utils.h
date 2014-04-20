@@ -61,5 +61,9 @@
 #define QSTRUCT_ALIGN_UP(p, a) (((p) + (a) - 1) & ~((a) - 1))
 
 
+#ifndef QSTRUCT_INLINE
+#  define QSTRUCT_INLINE inline
+#endif
+
 
 #endif
