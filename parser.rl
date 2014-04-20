@@ -19,7 +19,7 @@
 } while(0);
 
 struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char *err_buf, size_t err_buf_size) {
-  char *p = schema, *pe = schema + schema_size;
+  char *p = schema, *pe = schema + schema_size, *eof = 0;
   int cs = -1;
 
   int curr_line = 1;
@@ -162,7 +162,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
            '@' integer >{ curr_item_index = 0; }
                        @{ curr_item_index = curr_item_index * 10 + (fc - '0'); }
            ws+
-           type array_spec?
+           type $!{ PARSE_ERROR("unrecognized type (line %d)", curr_line); }
+           array_spec?
            ws* ';';
 
     qstruct = ws*
