@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "qstruct_compiler.h"
 #include "internal.h"
@@ -11,12 +12,6 @@
   machine qstruct;
   write data;
 }%%
-
-#define PARSE_ERROR(...) do { \
-  snprintf(err_buf, err_buf_size, __VA_ARGS__); \
-  err = 1; \
-  goto bail; \
-} while(0);
 
 struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char *err_buf, size_t err_buf_size) {
   char *p = schema, *pe = schema + schema_size, *eof = 0;
@@ -35,6 +30,10 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   ssize_t largest_item;
   ssize_t packing_result;
 
+  char err_ctx_buf[256];
+  char err_desc_buf[512];
+  char *err_ctx_start, *err_ctx_end;
+
 
   // the ragel state machine will initialise these variables, assignments silence compiler warnings
   curr_item_index = 0;
@@ -42,6 +41,18 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   items_allocated = 0;
   largest_item = -1;
 
+
+  #define PARSE_ERROR(...) do { \
+    snprintf(err_desc_buf, sizeof(err_desc_buf), __VA_ARGS__); \
+    for(err_ctx_start=p; err_ctx_start>schema && *err_ctx_start != '\n' && (p-err_ctx_start) < 20; err_ctx_start--) {} \
+    while (isspace(*err_ctx_start) && err_ctx_start < p) err_ctx_start++; \
+    for(err_ctx_end=p; err_ctx_end<(pe-1) && *err_ctx_end != '\n' && (err_ctx_end-p) < 20; err_ctx_end++) {} \
+    memcpy(err_ctx_buf, err_ctx_start, err_ctx_end - err_ctx_start); \
+    *(err_ctx_buf + (err_ctx_end - err_ctx_start)) = '\0'; \
+    snprintf(err_buf, err_buf_size, "\n------------------------------------------------------------\nQstruct schema parse error (line %d, character %d)\n\n  %s\n  %*s^\n  %*s|--%s\n\n------------------------------------------------------------\n", curr_line, (int)(p-schema), err_ctx_buf, (int)(p-err_ctx_start), " ", (int)(p-err_ctx_start), " ", err_desc_buf); \
+    err = 1; \
+    goto bail; \
+  } while(0);
 
   %%{
     action init_qstruct {
@@ -79,16 +90,16 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       }
 
       if ((curr_item.type & 0xFFFF) == QSTRUCT_TYPE_BOOL && (curr_item.type & (QSTRUCT_TYPE_MOD_ARRAY_FIX | QSTRUCT_TYPE_MOD_ARRAY_DYN)))
-        PARSE_ERROR("bools can't be arrays (line %d)", curr_line);
+        PARSE_ERROR("bools can't be arrays");
 
       if ((curr_item.type & 0xFFFF) == QSTRUCT_TYPE_STRING && (curr_item.type & QSTRUCT_TYPE_MOD_ARRAY_FIX))
-        PARSE_ERROR("strings can't be fixed-size arrays (line %d)", curr_line);
+        PARSE_ERROR("strings can't be fixed-size arrays");
 
       if ((curr_item.type & 0xFFFF) == QSTRUCT_TYPE_BLOB && (curr_item.type & QSTRUCT_TYPE_MOD_ARRAY_FIX))
-        PARSE_ERROR("blobs can't be fixed-size arrays (line %d)", curr_line);
+        PARSE_ERROR("blobs can't be fixed-size arrays");
 
       if (def->items[curr_item_index].occupied)
-        PARSE_ERROR("duplicated index %ld (line %d)", curr_item_index, curr_line);
+        PARSE_ERROR("duplicated index %ld", curr_item_index);
 
       def->items[curr_item_index].name = curr_item.name;
       def->items[curr_item_index].name_len = curr_item.name_len;
@@ -102,14 +113,14 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
     action handle_qstruct {
       for(i=0; i<largest_item; i++) {
         if (!def->items[i].occupied)
-          PARSE_ERROR("missing item %ld (line %d)", i, curr_line);
+          PARSE_ERROR("missing item %ld", i);
       }
 
       def[0].num_items = largest_item+1;
 
       packing_result = calculate_qstruct_packing(def);
       if (packing_result < 0)
-        PARSE_ERROR("memory error in packing (line %d)", curr_line);
+        PARSE_ERROR("memory error in packing");
 
       def[0].body_size = (size_t) packing_result - QSTRUCT_HEADER_SIZE;
     }
@@ -162,7 +173,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
            '@' integer >{ curr_item_index = 0; }
                        @{ curr_item_index = curr_item_index * 10 + (fc - '0'); }
            ws+
-           type $!{ PARSE_ERROR("unrecognized type (line %d)", curr_line); }
+           type $!{ PARSE_ERROR("unrecognized type"); }
            array_spec?
            ws* ';';
 
@@ -185,7 +196,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   }%%
 
   if (cs < qstruct_first_final)
-    PARSE_ERROR("general parse error (line %d)", curr_line);
+    PARSE_ERROR("general parse error");
 
   bail:
 
