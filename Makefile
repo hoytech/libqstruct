@@ -22,7 +22,8 @@ all: $(INSTALLEDLIBS)
 
 install: $(INSTALLEDLIBS) $(INSTALLEDHDRS)
 	for f in $(INSTALLEDLIBS); do cp $$f $(DESTDIR)$(prefix)/lib; done
-	for f in $(INSTALLEDHDRS); do cp $$f $(DESTDIR)$(prefix)/include/qstruct; done
+	mkdir $(DESTDIR)$(prefix)/include/qstruct/
+	for f in $(INSTALLEDHDRS); do cp $$f $(DESTDIR)$(prefix)/include/qstruct/; done
 
 clean:
 	rm -rf *.[ao] *.so parser.c
@@ -39,8 +40,8 @@ parser.o: parser.c qstruct/compiler.h
 parser.c: parser.rl Makefile
 	ragel -T0 parser.rl
 
-%: %.o
+%: %.o Makefile
 	$(CC) $(CFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-%.o: %.c $(INSTALLEDHDRS)
+%.o: %.c $(INSTALLEDHDRS) Makefile
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $<
