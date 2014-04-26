@@ -142,9 +142,10 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
     whitespace_char = any_count_line - 0x21..0x7e;
 
     alnum_u = alnum | '_';
-    alpha_u = alpha | '_';
+    alpha_u = alnum | '_';
+    uc_alpha_u = [A-Z] | '_';
     identifier = alpha_u alnum_u*;
-    identifier_with_package = alpha_u alnum_u* ('::' alpha_u alnum_u*)*;
+    identifier_with_package = uc_alpha_u alnum_u* ('::' uc_alpha_u alnum_u*)*;
     integer = digit+;
 
     ws = (
