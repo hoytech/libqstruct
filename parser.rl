@@ -7,7 +7,7 @@
 
 #include "qstruct/compiler.h"
 
-ssize_t calculate_qstruct_packing(struct qstruct_definition *def);
+ssize_t calculate_qstruct_packing(struct qstruct_definition *);
 
 
 %%{
@@ -23,9 +23,10 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   ssize_t i;
   int err = 0;
 
-  struct qstruct_definition *def = NULL, *new_def;
+  struct qstruct_definition *def = NULL, *new_def, *curr_def, *temp_def;
   struct qstruct_item curr_item;
   ssize_t curr_item_index;
+  struct qstruct_definition *def_hash_by_name = NULL, *def_lookup;
 
   struct qstruct_item *new_items;
   ssize_t items_allocated;
@@ -36,6 +37,9 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   char err_ctx_buf[256];
   char err_desc_buf[512];
   char *err_ctx_start, *err_ctx_end;
+
+
+  // Parsing phase
 
 
   // the ragel state machine will initialise these variables, assignments silence compiler warnings
@@ -130,12 +134,6 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       HASH_CLEAR(hh, item_hash_by_name);
 
       def[0].num_items = largest_item+1;
-
-      packing_result = calculate_qstruct_packing(def);
-      if (packing_result < 0)
-        PARSE_ERROR("memory error in packing");
-
-      def[0].body_size = (size_t) packing_result - QSTRUCT_HEADER_SIZE;
     }
 
 
@@ -219,9 +217,42 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   if (cs < qstruct_first_final)
     PARSE_ERROR("general parse error");
 
+
+  // Compilation phase
+
+  curr_def = NULL;
+
+  while (def) {
+    temp_def = def->next;
+    def->next = curr_def;
+    curr_def = def;
+    def = temp_def;
+  }
+
+  def = curr_def;
+
+  assert(!def_hash_by_name);
+
+  for(curr_def = def; curr_def; curr_def = curr_def->next) {
+    HASH_FIND(hh, def_hash_by_name, curr_def->name, curr_def->name_len, def_lookup);
+    if (def_lookup)
+      PARSE_ERROR("duplicate def name '%.*s'", (int) curr_def->name_len, curr_def->name);
+
+    HASH_ADD_KEYPTR(hh, def_hash_by_name, curr_def->name, curr_def->name_len, curr_def);
+
+    packing_result = calculate_qstruct_packing(curr_def);
+
+    if (packing_result < 0)
+      PARSE_ERROR("memory error in packing");
+
+    curr_def->body_size = (size_t) packing_result - QSTRUCT_HEADER_SIZE;
+  }
+
+
   bail:
 
   HASH_CLEAR(hh, item_hash_by_name);
+  HASH_CLEAR(hh, def_hash_by_name);
 
   if (err) {
     free_qstruct_definitions(def);

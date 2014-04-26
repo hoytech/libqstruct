@@ -30,6 +30,9 @@ struct qstruct_definition {
   size_t num_items;
   size_t body_size;
   struct qstruct_definition *next;
+
+  // private
+  UT_hash_handle hh;
 };
 
 struct qstruct_item {
