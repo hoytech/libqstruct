@@ -30,6 +30,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   ssize_t items_allocated;
   ssize_t largest_item;
   ssize_t packing_result;
+  struct qstruct_item *item_hash_by_name = NULL, *item_lookup;
 
   char err_ctx_buf[256];
   char err_desc_buf[512];
@@ -72,6 +73,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
 
       largest_item = -1;
       for (i=0; i<items_allocated; i++) def->items[i].occupied = 0;
+
+      HASH_CLEAR(hh, item_hash_by_name);
     }
 
     action handle_item {
@@ -102,11 +105,17 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       if (def->items[curr_item_index].occupied)
         PARSE_ERROR("duplicated index %ld", curr_item_index);
 
+      HASH_FIND(hh, item_hash_by_name, curr_item.name, curr_item.name_len, item_lookup);
+      if (item_lookup)
+        PARSE_ERROR("duplicate item name");
+
       def->items[curr_item_index].name = curr_item.name;
       def->items[curr_item_index].name_len = curr_item.name_len;
       def->items[curr_item_index].type = curr_item.type;
       def->items[curr_item_index].fixed_array_size = curr_item.fixed_array_size;
       def->items[curr_item_index].occupied = 1;
+
+      HASH_ADD_KEYPTR(hh, item_hash_by_name, curr_item.name, curr_item.name_len, &def->items[curr_item_index]);
 
       if (curr_item_index > largest_item) largest_item = curr_item_index;
     }
@@ -208,6 +217,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
     PARSE_ERROR("general parse error");
 
   bail:
+
+  HASH_CLEAR(hh, item_hash_by_name);
 
   if (err) {
     free_qstruct_definitions(def);

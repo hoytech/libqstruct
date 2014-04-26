@@ -3,6 +3,8 @@
 
 #include <inttypes.h>
 
+#include "uthash.h"
+
 
 #define QSTRUCT_HEADER_SIZE 16
 
@@ -40,6 +42,7 @@ struct qstruct_item {
 
   // private
   int occupied;
+  UT_hash_handle hh;
 };
 
 
