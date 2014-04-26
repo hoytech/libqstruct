@@ -17,6 +17,7 @@
 #define QSTRUCT_TYPE_INT16 7
 #define QSTRUCT_TYPE_INT32 8
 #define QSTRUCT_TYPE_INT64 9
+#define QSTRUCT_TYPE_NESTED 10
 
 #define QSTRUCT_TYPE_MOD_UNSIGNED (1<<16)
 #define QSTRUCT_TYPE_MOD_ARRAY_FIX (1<<17)
@@ -29,6 +30,7 @@ struct qstruct_definition {
   struct qstruct_item *items;
   size_t num_items;
   size_t body_size;
+  int body_alignment;
   struct qstruct_definition *next;
 
   // private
@@ -42,9 +44,13 @@ struct qstruct_item {
   uint64_t fixed_array_size;
   size_t byte_offset;
   int bit_offset;
+  struct qstruct_definition *nested_def;
 
   // private
   int occupied;
+  int compiled;
+  char *nested_name;
+  size_t nested_name_len;
   UT_hash_handle hh;
 };
 

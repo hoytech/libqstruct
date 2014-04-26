@@ -7,7 +7,7 @@
 
 #include "qstruct/compiler.h"
 
-ssize_t calculate_qstruct_packing(struct qstruct_definition *);
+int calculate_qstruct_packing(struct qstruct_definition *);
 
 
 %%{
@@ -21,6 +21,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
 
   int curr_line = 1;
   ssize_t i;
+  size_t j;
   int err = 0;
 
   struct qstruct_definition *def = NULL, *new_def, *curr_def, *temp_def;
@@ -31,7 +32,6 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   struct qstruct_item *new_items;
   ssize_t items_allocated;
   ssize_t largest_item;
-  ssize_t packing_result;
   struct qstruct_item *item_hash_by_name = NULL, *item_lookup;
 
   char err_ctx_buf[256];
@@ -105,6 +105,9 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       if ((curr_item.type & 0xFFFF) == QSTRUCT_TYPE_BLOB && (curr_item.type & QSTRUCT_TYPE_MOD_ARRAY_FIX))
         PARSE_ERROR("blobs can't be fixed-size arrays");
 
+      if ((curr_item.type & 0xFFFF) == QSTRUCT_TYPE_NESTED && (curr_item.type & QSTRUCT_TYPE_MOD_ARRAY_FIX))
+        PARSE_ERROR("nested qstructs can't be fixed-size arrays");
+
       if (def->items[curr_item_index].occupied)
         PARSE_ERROR("duplicated index %ld", curr_item_index);
 
@@ -112,7 +115,10 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       def->items[curr_item_index].name_len = curr_item.name_len;
       def->items[curr_item_index].type = curr_item.type;
       def->items[curr_item_index].fixed_array_size = curr_item.fixed_array_size;
+      def->items[curr_item_index].nested_name = curr_item.nested_name;
+      def->items[curr_item_index].nested_name_len = curr_item.nested_name_len;
       def->items[curr_item_index].occupied = 1;
+      def->items[curr_item_index].compiled = 0;
 
       if (curr_item_index > largest_item) largest_item = curr_item_index;
     }
@@ -166,7 +172,9 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
            'int32' %{ curr_item.type = QSTRUCT_TYPE_INT32; } |
            'uint32' %{ curr_item.type = QSTRUCT_TYPE_INT32 | QSTRUCT_TYPE_MOD_UNSIGNED; } |
            'int64' %{ curr_item.type = QSTRUCT_TYPE_INT64; } |
-           'uint64' %{ curr_item.type = QSTRUCT_TYPE_INT64 | QSTRUCT_TYPE_MOD_UNSIGNED; }
+           'uint64' %{ curr_item.type = QSTRUCT_TYPE_INT64 | QSTRUCT_TYPE_MOD_UNSIGNED; } |
+           identifier_with_package >{ curr_item.nested_name = p; curr_item.type = QSTRUCT_TYPE_NESTED; }
+                                   %{ curr_item.nested_name_len = p - curr_item.nested_name; }
       ;
 
     array_spec = ('['
@@ -221,32 +229,36 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
 
   // Compilation phase
 
-  curr_def = NULL;
-
-  while (def) {
+  // reverse def list
+  for (curr_def=NULL; def;) {
     temp_def = def->next;
     def->next = curr_def;
     curr_def = def;
     def = temp_def;
   }
-
   def = curr_def;
 
   assert(!def_hash_by_name);
 
   for(curr_def = def; curr_def; curr_def = curr_def->next) {
+    for(j=0; j<def->num_items; j++) {
+      if ((def->items[j].type & 0xFFFF) == QSTRUCT_TYPE_NESTED) {
+        HASH_FIND(hh, def_hash_by_name, def->items[j].nested_name, def->items[j].nested_name_len, def_lookup);
+        if (!def_lookup)
+          PARSE_ERROR("type '%.*s' referred to before being defined", (int) def->items[j].nested_name_len, def->items[j].nested_name);
+
+        def->items[j].nested_def = def_lookup;
+      }
+    }
+
     HASH_FIND(hh, def_hash_by_name, curr_def->name, curr_def->name_len, def_lookup);
     if (def_lookup)
       PARSE_ERROR("duplicate def name '%.*s'", (int) curr_def->name_len, curr_def->name);
 
     HASH_ADD_KEYPTR(hh, def_hash_by_name, curr_def->name, curr_def->name_len, curr_def);
 
-    packing_result = calculate_qstruct_packing(curr_def);
-
-    if (packing_result < 0)
+    if (calculate_qstruct_packing(curr_def) < 0)
       PARSE_ERROR("memory error in packing");
-
-    curr_def->body_size = (size_t) packing_result - QSTRUCT_HEADER_SIZE;
   }
 
 

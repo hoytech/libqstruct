@@ -14,6 +14,7 @@ static int alignment_of_type(struct qstruct_item *item) {
     case QSTRUCT_TYPE_BLOB:
     case QSTRUCT_TYPE_DOUBLE:
     case QSTRUCT_TYPE_INT64:
+    case QSTRUCT_TYPE_NESTED:
       return 8;
     case QSTRUCT_TYPE_FLOAT:
     case QSTRUCT_TYPE_INT32:
@@ -36,6 +37,7 @@ static int size_of_type(struct qstruct_item *item) {
   switch(item->type & 0xFFFF) {
     case QSTRUCT_TYPE_STRING:
     case QSTRUCT_TYPE_BLOB:
+    case QSTRUCT_TYPE_NESTED:
       return 16;
     case QSTRUCT_TYPE_DOUBLE:
     case QSTRUCT_TYPE_INT64:
@@ -61,6 +63,7 @@ static int worst_case_size_of_type(struct qstruct_item *item) {
   switch(item->type & 0xFFFF) {
     case QSTRUCT_TYPE_STRING:
     case QSTRUCT_TYPE_BLOB:
+    case QSTRUCT_TYPE_NESTED:
       return 16;
     case QSTRUCT_TYPE_DOUBLE:
     case QSTRUCT_TYPE_INT64:
@@ -82,7 +85,7 @@ ssize_t calculate_qstruct_packing(struct qstruct_definition *def) {
   size_t curr_body_offset = QSTRUCT_HEADER_SIZE, max_body_size = QSTRUCT_HEADER_SIZE, space_needed;
   char *packing_array;
   size_t curr_alignment_offsets[17]; // 17 includes special single-bit boolean offset in elem 0
-  size_t i, desired_alignment, curr_item;
+  size_t i, desired_alignment, curr_item, max_alignment=1;
 
   for (i=0; i<17; i++) curr_alignment_offsets[i] = QSTRUCT_HEADER_SIZE;
 
@@ -99,6 +102,7 @@ ssize_t calculate_qstruct_packing(struct qstruct_definition *def) {
     item = def->items + curr_item;
 
     desired_alignment = alignment_of_type(item);
+    if (desired_alignment > max_alignment) max_alignment = desired_alignment;
 
     if (desired_alignment == 0) {
       // special case for single-bit booleans
@@ -146,6 +150,9 @@ ssize_t calculate_qstruct_packing(struct qstruct_definition *def) {
   }
 
   free(packing_array);
+
+  def->body_size = curr_body_offset - QSTRUCT_HEADER_SIZE;
+  def->body_alignment = max_alignment;
 
   return curr_body_offset;
 }
