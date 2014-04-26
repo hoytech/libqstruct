@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <assert.h>
 
 #include "qstruct/compiler.h"
 
@@ -113,6 +114,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
     }
 
     action handle_qstruct {
+      assert(!item_hash_by_name);
+
       for(i=0; i<=largest_item; i++) {
         if (!def->items[i].occupied)
           PARSE_ERROR("missing item %ld", i);
