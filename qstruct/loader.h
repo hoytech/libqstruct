@@ -43,6 +43,19 @@ static QSTRUCT_INLINE int qstruct_sanity_check(char *buf, size_t buf_size) {
 }
 
 
+static QSTRUCT_INLINE int qstruct_unpack_header(char *buf, size_t buf_size, uint64_t *output_magic_id, uint32_t *output_body_size, uint32_t *output_body_count) {
+  uint32_t body_index = 0, byte_offset = 0;
+  int allow_heap = 1;
+  QSTRUCT_GETTER_PREAMBLE(0)
+
+  QSTRUCT_LOAD_4BYTE_LE(buf, output_magic_id);
+  *output_body_size = body_size;
+  *output_body_count = body_count;
+
+  return 0;
+}
+
+
 
 static QSTRUCT_INLINE int qstruct_get_uint64(char *buf, size_t buf_size, uint32_t body_index, uint32_t byte_offset, uint64_t *output, int allow_heap) {
   QSTRUCT_GETTER_PREAMBLE(8)
