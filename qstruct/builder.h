@@ -22,7 +22,7 @@ static QSTRUCT_INLINE struct qstruct_builder *qstruct_builder_new(uint64_t magic
   uint64_t content_size64;
   size_t content_size;
 
-  content_size64 = body_size * body_count;
+  content_size64 = QSTRUCT_ALIGN_UP(body_size, QSTRUCT_BODY_SIZE_TO_ALIGNMENT(body_size)) * body_count;
   if (content_size64 > SIZE_MAX/2) return NULL;
 
   content_size = (size_t) content_size64;
