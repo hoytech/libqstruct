@@ -19,7 +19,7 @@ struct qstruct_builder {
 
 static QSTRUCT_INLINE struct qstruct_builder *qstruct_builder_new(uint64_t magic_id, uint32_t body_size, uint32_t body_count) {
   struct qstruct_builder *builder;
-  uint64 content_size64;
+  uint64_t content_size64;
   size_t content_size;
 
   content_size64 = body_size * body_count;
@@ -83,8 +83,6 @@ static QSTRUCT_INLINE int qstruct_builder_expand_msg(struct qstruct_builder *bui
 
     memset(builder->buf + builder->buf_size, '\0', new_buf_size - builder->buf_size);
     builder->buf_size = new_buf_size;
-  } else if (new_buf_size < builder->buf_size) {
-    return -1; // attempted to shrink msg: size_t overflow
   }
 
   if (new_buf_size > builder->msg_size) builder->msg_size = new_buf_size;
@@ -97,7 +95,7 @@ static QSTRUCT_INLINE int qstruct_builder_expand_msg(struct qstruct_builder *bui
 #define QSTRUCT_BUILDER_SETTER_PREAMBLE(size_of_val) \
   uint32_t actual_offset = QSTRUCT_HEADER_SIZE + (QSTRUCT_ALIGN_UP(builder->body_size, QSTRUCT_BODY_SIZE_TO_ALIGNMENT(builder->body_size)) * body_index) + byte_offset; \
   if (actual_offset + (size_of_val) > builder->msg_size) return -1; \
-  if (body_index > builder->body_count) return -2;
+  if (body_index >= builder->body_count) return -2;
 
 
 
@@ -156,7 +154,7 @@ static QSTRUCT_INLINE int qstruct_builder_set_pointer(struct qstruct_builder *bu
     *((uint8_t *)(builder->buf + actual_offset)) = (uint8_t) value_size;
   } else {
     data_start = QSTRUCT_ALIGN_UP(builder->msg_size, alignment);
-    if (qstruct_builder_expand_msg(builder, data_start + value_size)) return -2;
+    if (qstruct_builder_expand_msg(builder, data_start + value_size)) return -4;
     data_start64 = (uint64_t)data_start;
     value_size64 = (uint64_t)value_size << 8;
     QSTRUCT_STORE_8BYTE_LE(&value_size64, builder->buf + actual_offset);

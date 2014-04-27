@@ -44,12 +44,11 @@ struct qstruct_item {
   uint32_t byte_offset;
   int bit_offset;
   struct qstruct_definition *nested_def;
+  char *nested_name;
+  size_t nested_name_len;
 
   // private
   int occupied;
-  int compiled;
-  char *nested_name;
-  size_t nested_name_len;
   UT_hash_handle hh;
 };
 

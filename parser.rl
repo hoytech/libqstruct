@@ -118,7 +118,6 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       def->items[curr_item_index].nested_name = curr_item.nested_name;
       def->items[curr_item_index].nested_name_len = curr_item.nested_name_len;
       def->items[curr_item_index].occupied = 1;
-      def->items[curr_item_index].compiled = 0;
 
       if (curr_item_index > largest_item) largest_item = curr_item_index;
     }

@@ -12,14 +12,16 @@
   uint32_t body_size, body_count; \
   uint64_t content_size; \
   int exceeds_bounds; \
-  size_t actual_offset;
+  size_t body_offset, actual_offset; \
   \
   if (buf_size < QSTRUCT_HEADER_SIZE) return -1; \
   QSTRUCT_LOAD_4BYTE_LE(buf + 8, &body_size); \
   QSTRUCT_LOAD_4BYTE_LE(buf + 12, &body_count); \
   \
+  if (body_index >= body_count) return -9; \
+  \
   content_size = (body_size * body_count) + QSTRUCT_HEADER_SIZE; \
-  if (content_size > MAX_SIZE/2) return -2; \
+  if (content_size > SIZE_MAX/2) return -3; \
   \
   body_offset = QSTRUCT_HEADER_SIZE + (QSTRUCT_ALIGN_UP(body_size, QSTRUCT_BODY_SIZE_TO_ALIGNMENT(body_size)) * body_index); \
   actual_offset = body_offset + byte_offset; \
@@ -31,7 +33,8 @@
 
 
 static QSTRUCT_INLINE int qstruct_sanity_check(char *buf, size_t buf_size) {
-  uint32_t body_index = 0;
+  uint32_t body_index = 0, byte_offset = 0;
+  int allow_heap = 1;
   QSTRUCT_GETTER_PREAMBLE(0)
 
   if (content_size > buf_size) return -2;
@@ -90,6 +93,7 @@ static QSTRUCT_INLINE int qstruct_get_uint8(char *buf, size_t buf_size, uint32_t
 }
 
 static QSTRUCT_INLINE int qstruct_get_bool(char *buf, size_t buf_size, uint32_t body_index, uint32_t byte_offset, int bit_offset, int *output) {
+  int allow_heap = 0;
   QSTRUCT_GETTER_PREAMBLE(1)
 
   if (exceeds_bounds) {
@@ -118,8 +122,8 @@ static QSTRUCT_INLINE int qstruct_get_pointer(char *buf, size_t buf_size, uint32
     } else {
       length = length >> 8;
       QSTRUCT_LOAD_8BYTE_LE(buf + actual_offset + 8, &start_offset);
-      if (start_offset + length > SIZE_MAX) return -2;
-      if (start_offset + length > buf_size) return -1;
+      if (start_offset + length > SIZE_MAX) return -6;
+      if (start_offset + length > buf_size) return -7;
       *output = buf + start_offset;
       *output_size = (size_t)length;
     }
