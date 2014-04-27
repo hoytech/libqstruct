@@ -7,111 +7,117 @@
 #include "qstruct/utils.h"
 
 
+  
+#define QSTRUCT_GETTER_PREAMBLE(size_of_val) \
+  uint32_t body_size, body_count; \
+  uint64_t content_size; \
+  int exceeds_bounds; \
+  size_t actual_offset;
+  \
+  if (buf_size < QSTRUCT_HEADER_SIZE) return -1; \
+  QSTRUCT_LOAD_4BYTE_LE(buf + 8, &body_size); \
+  QSTRUCT_LOAD_4BYTE_LE(buf + 12, &body_count); \
+  \
+  content_size = (body_size * body_count) + QSTRUCT_HEADER_SIZE; \
+  if (content_size > MAX_SIZE/2) return -2; \
+  \
+  body_offset = QSTRUCT_HEADER_SIZE + (QSTRUCT_ALIGN_UP(body_size, QSTRUCT_BODY_SIZE_TO_ALIGNMENT(body_size)) * body_index); \
+  actual_offset = body_offset + byte_offset; \
+  \
+  exceeds_bounds = ((!allow_heap && byte_offset + (size_of_val) > body_size) || \
+                    (body_offset + (size_of_val) > buf_size));
+
+
+
 
 static QSTRUCT_INLINE int qstruct_sanity_check(char *buf, size_t buf_size) {
-  uint64_t body_size;
-  if (buf_size < 16) return -1;
-  QSTRUCT_LOAD_8BYTE_LE(buf + 8, &body_size);
+  uint32_t body_index = 0;
+  QSTRUCT_GETTER_PREAMBLE(0)
 
-  if (body_size + 16 > buf_size) return -2;
+  if (content_size > buf_size) return -2;
 
   return 0;
 }
 
 
-static QSTRUCT_INLINE int qstruct_get_uint64(char *buf, size_t buf_size, size_t byte_offset, uint64_t *output, int allow_heap) {
-  uint64_t body_size;
-  if (buf_size < 16) return -1;
-  QSTRUCT_LOAD_8BYTE_LE(buf + 8, &body_size);
 
-  if ((!allow_heap && QSTRUCT_HEADER_SIZE + byte_offset + 8 > body_size + 16) ||
-      (QSTRUCT_HEADER_SIZE + byte_offset + 8 > buf_size)) {
+static QSTRUCT_INLINE int qstruct_get_uint64(char *buf, size_t buf_size, uint32_t body_index, uint32_t byte_offset, uint64_t *output, int allow_heap) {
+  QSTRUCT_GETTER_PREAMBLE(8)
+
+  if (exceeds_bounds) {
     *output = 0; // default value
   } else {
-    QSTRUCT_LOAD_8BYTE_LE(buf + QSTRUCT_HEADER_SIZE + byte_offset, output);
+    QSTRUCT_LOAD_8BYTE_LE(buf + actual_offset, output);
   }
 
   return 0;
 }
 
-static QSTRUCT_INLINE int qstruct_get_uint32(char *buf, size_t buf_size, size_t byte_offset, uint32_t *output, int allow_heap) {
-  uint64_t body_size;
-  if (buf_size < 16) return -1;
-  QSTRUCT_LOAD_8BYTE_LE(buf + 8, &body_size);
+static QSTRUCT_INLINE int qstruct_get_uint32(char *buf, size_t buf_size, uint32_t body_index, uint32_t byte_offset, uint32_t *output, int allow_heap) {
+  QSTRUCT_GETTER_PREAMBLE(4)
 
-  if ((!allow_heap && QSTRUCT_HEADER_SIZE + byte_offset + 4 > body_size + 16) ||
-      (QSTRUCT_HEADER_SIZE + byte_offset + 4 > buf_size)) {
+  if (exceeds_bounds) {
     *output = 0; // default value
   } else {
-    QSTRUCT_LOAD_4BYTE_LE(buf + QSTRUCT_HEADER_SIZE + byte_offset, output);
+    QSTRUCT_LOAD_4BYTE_LE(buf + actual_offset, output);
   }
 
   return 0;
 }
 
-static QSTRUCT_INLINE int qstruct_get_uint16(char *buf, size_t buf_size, size_t byte_offset, uint16_t *output, int allow_heap) {
-  uint64_t body_size;
-  if (buf_size < 16) return -1;
-  QSTRUCT_LOAD_8BYTE_LE(buf + 8, &body_size);
+static QSTRUCT_INLINE int qstruct_get_uint16(char *buf, size_t buf_size, uint32_t body_index, uint32_t byte_offset, uint16_t *output, int allow_heap) {
+  QSTRUCT_GETTER_PREAMBLE(2)
 
-  if ((!allow_heap && QSTRUCT_HEADER_SIZE + byte_offset + 2 > body_size + 16) ||
-      (QSTRUCT_HEADER_SIZE + byte_offset + 2 > buf_size)) {
+  if (exceeds_bounds) {
     *output = 0; // default value
   } else {
-    QSTRUCT_LOAD_2BYTE_LE(buf + QSTRUCT_HEADER_SIZE + byte_offset, output);
+    QSTRUCT_LOAD_2BYTE_LE(buf + actual_offset, output);
   }
 
   return 0;
 }
 
-static QSTRUCT_INLINE int qstruct_get_uint8(char *buf, size_t buf_size, size_t byte_offset, uint8_t *output, int allow_heap) {
-  uint64_t body_size;
-  if (buf_size < 16) return -1;
-  QSTRUCT_LOAD_8BYTE_LE(buf + 8, &body_size);
+static QSTRUCT_INLINE int qstruct_get_uint8(char *buf, size_t buf_size, uint32_t body_index, uint32_t byte_offset, uint8_t *output, int allow_heap) {
+  QSTRUCT_GETTER_PREAMBLE(1)
 
-  if ((!allow_heap && QSTRUCT_HEADER_SIZE + byte_offset + 1 > body_size + 16) ||
-      (QSTRUCT_HEADER_SIZE + byte_offset + 1 > buf_size)) {
+  if (exceeds_bounds) {
     *output = 0; // default value
   } else {
-    *output = *((uint8_t*)(buf + QSTRUCT_HEADER_SIZE + byte_offset));
+    *output = *((uint8_t*)(buf + actual_offset));
   }
 
   return 0;
 }
 
-static QSTRUCT_INLINE int qstruct_get_bool(char *buf, size_t buf_size, size_t byte_offset, int bit_offset, int *output) {
-  uint64_t body_size;
-  if (buf_size < 16) return -1;
-  QSTRUCT_LOAD_8BYTE_LE(buf + 8, &body_size);
+static QSTRUCT_INLINE int qstruct_get_bool(char *buf, size_t buf_size, uint32_t body_index, uint32_t byte_offset, int bit_offset, int *output) {
+  QSTRUCT_GETTER_PREAMBLE(1)
 
-  if (QSTRUCT_HEADER_SIZE + byte_offset + 1 > body_size + 16 || QSTRUCT_HEADER_SIZE + byte_offset + 1 > buf_size) {
+  if (exceeds_bounds) {
     *output = 0; // default to false
   } else {
-    *output = !!(*((uint8_t *)(buf + QSTRUCT_HEADER_SIZE + byte_offset)) & bit_offset);
+    *output = !!(*((uint8_t *)(buf + actual_offset)) & bit_offset);
   }
 
   return 0;
 }
 
 
-static QSTRUCT_INLINE int qstruct_get_pointer(char *buf, size_t buf_size, size_t byte_offset, char **output, size_t *output_size, int alignment, int allow_heap) {
-  uint64_t body_size, length, start_offset;
-  if (buf_size < 16) return -1;
-  QSTRUCT_LOAD_8BYTE_LE(buf + 8, &body_size);
+static QSTRUCT_INLINE int qstruct_get_pointer(char *buf, size_t buf_size, uint32_t body_index, uint32_t byte_offset, char **output, size_t *output_size, int alignment, int allow_heap) {
+  uint64_t length, start_offset;
+  QSTRUCT_GETTER_PREAMBLE(16)
 
-  if ((!allow_heap && QSTRUCT_HEADER_SIZE + byte_offset + 16 > body_size + 16) ||
-      (QSTRUCT_HEADER_SIZE + byte_offset + 16 > buf_size)) {
+  if (exceeds_bounds) {
     *output = 0; // default value
     *output_size = 0;
   } else {
-    QSTRUCT_LOAD_8BYTE_LE(buf + QSTRUCT_HEADER_SIZE + byte_offset, &length);
+    QSTRUCT_LOAD_8BYTE_LE(buf + actual_offset, &length);
 
     if (alignment == 1 && length & 0xF) {
-      *output = buf + QSTRUCT_HEADER_SIZE + byte_offset + 1;
+      *output = buf + actual_offset + 1;
       *output_size = (size_t)(length & 0xF);
     } else {
       length = length >> 8;
-      QSTRUCT_LOAD_8BYTE_LE(buf + QSTRUCT_HEADER_SIZE + byte_offset + 8, &start_offset);
+      QSTRUCT_LOAD_8BYTE_LE(buf + actual_offset + 8, &start_offset);
       if (start_offset + length > SIZE_MAX) return -2;
       if (start_offset + length > buf_size) return -1;
       *output = buf + start_offset;
@@ -123,19 +129,14 @@ static QSTRUCT_INLINE int qstruct_get_pointer(char *buf, size_t buf_size, size_t
 }
 
 
-static QSTRUCT_INLINE int qstruct_get_raw_bytes(char *buf, size_t buf_size, size_t byte_offset, size_t length, char **output, size_t *output_size, int allow_heap) {
-  uint64_t body_size;
-  if (buf_size < 16) return -1;
-  QSTRUCT_LOAD_8BYTE_LE(buf + 8, &body_size);
+static QSTRUCT_INLINE int qstruct_get_raw_bytes(char *buf, size_t buf_size, uint32_t body_index, uint32_t byte_offset, size_t length, char **output, size_t *output_size, int allow_heap) {
+  QSTRUCT_GETTER_PREAMBLE(length)
 
-  if (buf_size < 16) return -1;
-
-  if ((!allow_heap && QSTRUCT_HEADER_SIZE + byte_offset + length > body_size + 16) ||
-      (QSTRUCT_HEADER_SIZE + byte_offset + length > buf_size)) {
+  if (exceeds_bounds) {
     *output = 0; // default value
     *output_size = 0;
   } else {
-    *output = buf + QSTRUCT_HEADER_SIZE + byte_offset;
+    *output = buf + actual_offset;
     *output_size = length;
   }
 

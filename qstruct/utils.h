@@ -61,6 +61,13 @@
 #define QSTRUCT_ALIGN_UP(p, a) (((p) + (a) - 1) & ~((a) - 1))
 
 
+#define QSTRUCT_BODY_SIZE_TO_ALIGNMENT(s) ((s) <= 1 ? 1 : \
+                                           (s) <= 2 ? 2 : \
+                                           (s) <= 4 ? 4 : \
+                                           8 \
+                                          )
+
+
 #ifndef QSTRUCT_INLINE
 #  define QSTRUCT_INLINE inline
 #endif

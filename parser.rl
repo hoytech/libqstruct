@@ -59,7 +59,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
     snprintf(err_buf, err_buf_size, "\n------------------------------------------------------------\nQstruct schema parse error (line %d, character %d)\n\n  %s\n  %*s^\n  %*s|--%s\n\n------------------------------------------------------------\n", curr_line, (int)(p-schema), err_ctx_buf, (int)(p-err_ctx_start), " ", (int)(p-err_ctx_start), " ", err_desc_buf); \
     err = 1; \
     goto bail; \
-  } while(0);
+  } while(0)
 
   %%{
     action init_qstruct {

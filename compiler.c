@@ -80,12 +80,12 @@ static int worst_case_size_of_type(struct qstruct_item *item) {
 
 
 
-ssize_t calculate_qstruct_packing(struct qstruct_definition *def) {
+int calculate_qstruct_packing(struct qstruct_definition *def) {
   struct qstruct_item *item;
-  size_t curr_body_offset = 0, max_body_size = 0, space_needed;
+  uint32_t curr_body_offset = 0, max_body_size = 0, space_needed;
+  uint32_t curr_alignment_offsets[17]; // 17 includes special single-bit boolean offset in elem 0
+  uint32_t i, desired_alignment, curr_item;
   char *packing_array;
-  size_t curr_alignment_offsets[17]; // 17 includes special single-bit boolean offset in elem 0
-  size_t i, desired_alignment, curr_item, max_alignment=1;
 
   for (i=0; i<17; i++) curr_alignment_offsets[i] = 0;
 
@@ -102,7 +102,6 @@ ssize_t calculate_qstruct_packing(struct qstruct_definition *def) {
     item = def->items + curr_item;
 
     desired_alignment = alignment_of_type(item);
-    if (desired_alignment > max_alignment) max_alignment = desired_alignment;
 
     if (desired_alignment == 0) {
       // special case for single-bit booleans
@@ -152,7 +151,6 @@ ssize_t calculate_qstruct_packing(struct qstruct_definition *def) {
   free(packing_array);
 
   def->body_size = curr_body_offset;
-  def->body_alignment = max_alignment;
 
-  return curr_body_offset;
+  return 0;
 }

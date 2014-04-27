@@ -29,8 +29,7 @@ struct qstruct_definition {
   size_t name_len;
   struct qstruct_item *items;
   size_t num_items;
-  size_t body_size;
-  int body_alignment;
+  uint32_t body_size;
   struct qstruct_definition *next;
 
   // private
@@ -41,8 +40,8 @@ struct qstruct_item {
   char *name;
   size_t name_len;
   int type;
-  uint64_t fixed_array_size;
-  size_t byte_offset;
+  uint32_t fixed_array_size;
+  uint32_t byte_offset;
   int bit_offset;
   struct qstruct_definition *nested_def;
 
