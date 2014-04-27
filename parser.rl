@@ -142,7 +142,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
     }
 
 
-    newline = '\n' @{curr_line++;};
+    newline = '\n' @{ curr_line++; };
     any_count_line = any | newline;
     whitespace_char = any_count_line - 0x21..0x7e;
 
@@ -155,11 +155,10 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
                               alnum_u* ('::' uc_alpha_u alnum_u*)*;
     integer = digit+;
 
-    ws = (
-           whitespace_char |
-           ( '#' [^\n]* newline ) |
-           ( '/*' ( ( any_count_line )* - ( any_count_line* '*/' any_count_line* ) ) '*/' )
-         );
+    ws = whitespace_char |
+         '#' [^\n]* newline |
+         '/*' (any_count_line* - (any_count_line* '*/' any_count_line*)) '*/'
+      ;
 
     type = 'string' %{ curr_item.type = QSTRUCT_TYPE_STRING; } |
            'blob' %{ curr_item.type = QSTRUCT_TYPE_BLOB; } |
@@ -179,16 +178,16 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       ;
 
     array_spec = '['
-                    ws*
-                    integer >{ curr_item.fixed_array_size = 0; }
-                            @{ curr_item.fixed_array_size = curr_item.fixed_array_size * 10 + (fc - '0'); }
-                    ws*
-                  ']' >{ curr_item.type |= QSTRUCT_TYPE_MOD_ARRAY_FIX; }
+                   ws*
+                   integer >{ curr_item.fixed_array_size = 0; }
+                           @{ curr_item.fixed_array_size = curr_item.fixed_array_size * 10 + (fc - '0'); }
+                   ws*
+                 ']' >{ curr_item.type |= QSTRUCT_TYPE_MOD_ARRAY_FIX; }
 
-                   |
+                  |
 
-                   '[' ws* ']' >{ curr_item.type |= QSTRUCT_TYPE_MOD_ARRAY_DYN; }
-                 ;
+                 '[' ws* ']' >{ curr_item.type |= QSTRUCT_TYPE_MOD_ARRAY_DYN; }
+      ;
 
     item = identifier >{ curr_item.name = p; curr_item.fixed_array_size = 1; }
                       %{ curr_item.name_len = p - curr_item.name; }
@@ -200,8 +199,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
            ws+
            type $!{ PARSE_ERROR("unrecognized type"); }
            ws*
-           array_spec?
-             $!{ PARSE_ERROR("invalid array specifier"); }
+           array_spec? $!{ PARSE_ERROR("invalid array specifier"); }
            ws* ';' $!{ PARSE_ERROR("missing semi-colon"); }
       ;
 
@@ -218,8 +216,6 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
              (ws* ';')?
       ;
 
-    ########################
-
     main := qstruct* ws*;
 
     write init;
@@ -233,7 +229,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   // Compilation phase
 
   // reverse def list
-  for (curr_def=NULL; def;) {
+  for (curr_def = NULL; def;) {
     temp_def = def->next;
     def->next = curr_def;
     curr_def = def;
