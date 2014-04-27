@@ -150,7 +150,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
     alpha_u = alnum | '_';
     uc_alpha_u = [A-Z] | '_';
     identifier = alpha_u alnum_u*;
-    identifier_with_package = uc_alpha_u alnum_u* ('::' uc_alpha_u alnum_u*)*;
+    identifier_with_package = uc_alpha_u $!{ PARSE_ERROR("qstruct names must start with uppercase letters"); }
+                              alnum_u* ('::' uc_alpha_u alnum_u*)*;
     integer = digit+;
 
     ws = (
