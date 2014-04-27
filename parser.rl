@@ -178,7 +178,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
                                    %{ curr_item.nested_name_len = p - curr_item.nested_name; }
       ;
 
-    array_spec = ('['
+    array_spec = '['
                     ws*
                     integer >{ curr_item.fixed_array_size = 0; }
                             @{ curr_item.fixed_array_size = curr_item.fixed_array_size * 10 + (fc - '0'); }
@@ -188,7 +188,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
                    |
 
                    '[' ws* ']' >{ curr_item.type |= QSTRUCT_TYPE_MOD_ARRAY_DYN; }
-                 );
+                 ;
 
     item = identifier >{ curr_item.name = p; curr_item.fixed_array_size = 1; }
                       %{ curr_item.name_len = p - curr_item.name; }
@@ -202,7 +202,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
            ws*
            array_spec?
              $!{ PARSE_ERROR("invalid array specifier"); }
-           ws* ';' $!{ PARSE_ERROR("missing semi-colon"); } ;
+           ws* ';' $!{ PARSE_ERROR("missing semi-colon"); }
+      ;
 
     qstruct = ws*
               ( [qQ] 'struct' ) >init_qstruct
@@ -214,7 +215,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
              '{'
                ws* (item @handle_item ws*)*
              '}' @handle_qstruct
-             (ws* ';')?;
+             (ws* ';')?
+      ;
 
     ########################
 
