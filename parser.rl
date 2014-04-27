@@ -42,7 +42,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   // Parsing phase
 
 
-  // the ragel state machine will initialise these variables, assignments silence compiler warnings
+  // our ragel machine will initialise these variables, assignments here are just to silence compiler warnings
   curr_item_index = 0;
   memset(&curr_item, '\0', sizeof(curr_item));
   items_allocated = 0;
@@ -51,14 +51,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
 
   #define PARSE_ERROR(...) do { \
     snprintf(err_desc_buf, sizeof(err_desc_buf), __VA_ARGS__); \
-    for(err_ctx_start=p; err_ctx_start>schema && *err_ctx_start != '\n' && (p-err_ctx_start) < 20; err_ctx_start--) {} \
-    while (isspace(*err_ctx_start) && err_ctx_start < p) err_ctx_start++; \
-    for(err_ctx_end=p; err_ctx_end<(pe-1) && *err_ctx_end != '\n' && (err_ctx_end-p) < 20; err_ctx_end++) {} \
-    memcpy(err_ctx_buf, err_ctx_start, err_ctx_end - err_ctx_start); \
-    *(err_ctx_buf + (err_ctx_end - err_ctx_start)) = '\0'; \
-    snprintf(err_buf, err_buf_size, "\n------------------------------------------------------------\nQstruct schema parse error (line %d, character %d)\n\n  %s\n  %*s^\n  %*s|--%s\n\n------------------------------------------------------------\n", curr_line, (int)(p-schema), err_ctx_buf, (int)(p-err_ctx_start), " ", (int)(p-err_ctx_start), " ", err_desc_buf); \
-    err = 1; \
-    goto bail; \
+    if (!err) err = 1; \
+    goto err_bail; \
   } while(0)
 
   %%{
@@ -226,6 +220,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
     PARSE_ERROR("general parse error");
 
 
+
+
   // Compilation phase
 
   // reverse def list
@@ -261,15 +257,29 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   }
 
 
-  bail:
+  // Success!
+  goto cleanup;
+
+
+  err_bail:
+
+  for(err_ctx_start=p; err_ctx_start>schema && *err_ctx_start != '\n' && (p-err_ctx_start) < 20; err_ctx_start--) {}
+  while (isspace(*err_ctx_start) && err_ctx_start < p) err_ctx_start++;
+  for(err_ctx_end=p; err_ctx_end<(pe-1) && *err_ctx_end != '\n' && (err_ctx_end-p) < 20; err_ctx_end++) {}
+  memcpy(err_ctx_buf, err_ctx_start, err_ctx_end - err_ctx_start);
+  *(err_ctx_buf + (err_ctx_end - err_ctx_start)) = '\0';
+  snprintf(err_buf, err_buf_size, "\n------------------------------------------------------------\nQstruct schema parse error (line %d, character %d)\n\n  %s\n  %*s^\n  %*s|--%s\n\n------------------------------------------------------------\n", curr_line, (int)(p-schema), err_ctx_buf, (int)(p-err_ctx_start), " ", (int)(p-err_ctx_start), " ", err_desc_buf);
+
+  if (def) {
+    free_qstruct_definitions(def);
+    def = NULL;
+  }
+
+
+  cleanup:
 
   HASH_CLEAR(hh, item_hash_by_name);
   HASH_CLEAR(hh, def_hash_by_name);
-
-  if (err) {
-    free_qstruct_definitions(def);
-    return NULL;
-  }
 
   return def;
 }
