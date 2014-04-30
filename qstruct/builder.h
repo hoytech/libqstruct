@@ -1,5 +1,5 @@
-#ifndef _QSTRUCT__QSTRUCT_BUILDER_H
-#define _QSTRUCT__QSTRUCT_BUILDER_H
+#ifndef _QSTRUCT_BUILDER_H
+#define _QSTRUCT_BUILDER_H
 
 #include <inttypes.h>
 #include <stdint.h>

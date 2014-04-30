@@ -1,5 +1,5 @@
-#ifndef _QSTRUCT__QSTRUCT_UTILS_H
-#define _QSTRUCT__QSTRUCT_UTILS_H
+#ifndef _QSTRUCT_UTILS_H
+#define _QSTRUCT_UTILS_H
 
 #include <inttypes.h>
 #include <stdint.h>

@@ -1,5 +1,5 @@
-#ifndef _QSTRUCT__QSTRUCT_COMPILER_H
-#define _QSTRUCT__QSTRUCT_COMPILER_H
+#ifndef _QSTRUCT_COMPILER_H
+#define _QSTRUCT_COMPILER_H
 
 #include <inttypes.h>
 

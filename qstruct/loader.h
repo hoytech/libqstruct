@@ -1,5 +1,5 @@
-#ifndef _QSTRUCT__QSTRUCT_LOADER_H
-#define _QSTRUCT__QSTRUCT_LOADER_H
+#ifndef _QSTRUCT_LOADER_H
+#define _QSTRUCT_LOADER_H
 
 #include <inttypes.h>
 #include <stdint.h>
