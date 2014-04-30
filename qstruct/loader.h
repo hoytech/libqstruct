@@ -7,7 +7,7 @@
 #include "qstruct/utils.h"
 
 
-  
+
 #define QSTRUCT_GETTER_PREAMBLE(size_of_val) \
   uint32_t body_size, body_count; \
   uint64_t content_size; \
