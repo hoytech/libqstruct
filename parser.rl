@@ -75,8 +75,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
     }
 
     action handle_item {
-      if (curr_item_index < 0)
-        PARSE_ERROR("id value overflow"); // FIXME: prolly need to check upper bound
+      if (curr_item_index < 0 || curr_item_index > 1000000)
+        PARSE_ERROR("@id way out of range");
 
       if (curr_item_index >= items_allocated) {
         new_items = realloc(def->items, curr_item_index*2 * sizeof(struct qstruct_item));
