@@ -260,7 +260,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   // Success!
   goto cleanup;
 
-
+  #undef PARSE_ERROR
   err_bail:
 
   for(err_ctx_start=p; err_ctx_start>schema && *err_ctx_start != '\n' && (p-err_ctx_start) < 20; err_ctx_start--) {}
