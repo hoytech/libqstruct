@@ -57,7 +57,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
 
   %%{
     action init_qstruct {
-      new_def = malloc(sizeof(struct qstruct_definition));
+      new_def = calloc(sizeof(struct qstruct_definition), 1);
       if (new_def == NULL)
         PARSE_ERROR("out of memory");
 
@@ -66,7 +66,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       new_def = NULL;
 
       items_allocated = 64;
-      def->items = malloc(items_allocated * sizeof(struct qstruct_item));
+      def->items = calloc(items_allocated, sizeof(struct qstruct_item));
       if (def->items == NULL)
         PARSE_ERROR("out of memory");
 
