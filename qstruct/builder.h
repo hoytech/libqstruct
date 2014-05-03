@@ -168,29 +168,6 @@ static QSTRUCT_INLINE int qstruct_builder_set_pointer(struct qstruct_builder *bu
 }
 
 
-static QSTRUCT_INLINE int qstruct_builder_set_array(struct qstruct_builder *builder, uint32_t body_index, uint32_t byte_offset, uint32_t elem_size, uint32_t elem_count, size_t *output_data_start) {
-  int ret;
-  int alignment = QSTRUCT_BODY_SIZE_TO_ALIGNMENT(elem_size);
-  size_t data_start;
-  uint64_t magic_id = 0;
-
-  elem_size = QSTRUCT_ALIGN_UP(elem_size, alignment);
-
-  ret = qstruct_builder_set_pointer(builder, body_index, byte_offset, NULL, QSTRUCT_HEADER_SIZE + (elem_size * elem_count), alignment, &data_start);
-  if (ret) return ret;
-
-  data_start += QSTRUCT_HEADER_SIZE;
-
-  QSTRUCT_STORE_8BYTE_LE(&magic_id, builder->buf + data_start);
-  QSTRUCT_STORE_4BYTE_LE(&elem_size, builder->buf + data_start + 8);
-  QSTRUCT_STORE_4BYTE_LE(&elem_count, builder->buf + data_start + 12);
-
-  *output_data_start = data_start;
-
-  return 0;
-}
-
-
 static QSTRUCT_INLINE int qstruct_builder_set_raw_bytes(struct qstruct_builder *builder, uint32_t body_index, uint32_t byte_offset, char *value, size_t value_size) {
   QSTRUCT_BUILDER_SETTER_PREAMBLE(value_size)
 
