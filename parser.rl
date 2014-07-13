@@ -27,6 +27,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   struct qstruct_definition *def = NULL, *new_def, *curr_def, *temp_def;
   struct qstruct_item curr_item;
   ssize_t curr_item_index;
+  size_t curr_item_order;
   struct qstruct_definition *def_hash_by_name = NULL, *def_lookup;
 
   struct qstruct_item *new_items;
@@ -47,6 +48,7 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
   memset(&curr_item, '\0', sizeof(curr_item));
   items_allocated = 0;
   largest_item = -1;
+  curr_item_order = 0;
 
 
   #define PARSE_ERROR(...) do { \
@@ -72,6 +74,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
 
       largest_item = -1;
       for (i=0; i<items_allocated; i++) def->items[i].occupied = 0;
+
+      curr_item_order = 0;
     }
 
     action handle_item {
@@ -114,6 +118,8 @@ struct qstruct_definition *parse_qstructs(char *schema, size_t schema_size, char
       def->items[curr_item_index].occupied = 1;
 
       if (curr_item_index > largest_item) largest_item = curr_item_index;
+
+      def->items[curr_item_index].item_order = curr_item_order++;
     }
 
     action handle_qstruct {

@@ -46,6 +46,7 @@ struct qstruct_item {
   struct qstruct_definition *nested_def;
   char *nested_name;
   size_t nested_name_len;
+  size_t item_order;
 
   // private
   int occupied;
