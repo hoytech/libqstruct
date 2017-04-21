@@ -1,0 +1,2 @@
+Make sure this can never happen:
+  https://github.com/sandstorm-io/capnproto/blob/master/security-advisories/2017-04-17-0-apple-clang-elides-bounds-check.md
